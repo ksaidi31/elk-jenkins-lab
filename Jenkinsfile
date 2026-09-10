@@ -72,12 +72,13 @@ pipeline {
 
         stage('Generate Logs') {
             steps {
-                echo 'Generating logs...'
+                echo "Generating logs for Jenkins build ${BUILD_NUMBER}..."
 
                 sh """
                     docker run --rm \
-                      --network ${COMPOSE_PROJECT_NAME}_default \
-                      ${APP_IMAGE}
+                    --network ${COMPOSE_PROJECT_NAME}_default \
+                    -e BUILD_NUMBER=${BUILD_NUMBER} \
+                    ${APP_IMAGE}
                 """
             }
         }
