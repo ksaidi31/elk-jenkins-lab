@@ -9,40 +9,13 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                echo 'Checking out source code...'
-                checkout scm
-            }
-        }
-
         stage('Python Tests') {
             steps {
                 echo 'Running Python tests...'
 
                 sh '''
-                    docker run --rm \
-                    -v "$PWD/app:/app" \
-                    -w /app \
-                    python:3.12-slim \
-                    sh -c '
-                        pip install -q pytest
-
-                        echo "=== Files inside container ==="
-                        ls -la
-
-                        echo "=== Test file ==="
-                        cat test_app.py
-
-                        echo "=== Pytest version ==="
-                        pytest --version
-
-                        echo "=== Pytest collection ==="
-                        pytest -vv --collect-only
-
-                        echo "=== Python files ==="
-                        python -c "import glob; print(glob.glob(\"*.py\"))"
-                    '
+                    cd app
+                    pytest -v
                 '''
             }
         }
