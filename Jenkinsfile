@@ -119,6 +119,20 @@ pipeline {
             }
         }
 
+        stage('Verify Kafka topic') {
+            steps {
+                echo 'Verifying Kafka topic...'
+
+                sh '''
+                    docker exec kafka \
+                    /opt/kafka/bin/kafka-topics.sh \
+                    --bootstrap-server localhost:9092 \
+                    --describe \
+                    --topic elk-jenkins-lab-logs
+                '''
+            }
+        }
+
         stage('Generate Logs') {
             steps {
                 echo "Generating logs for Jenkins build ${BUILD_NUMBER}..."
