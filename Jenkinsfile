@@ -21,21 +21,28 @@ pipeline {
                 echo 'Running Python tests...'
 
                 sh '''
-                    echo "=== Workspace ==="
-                    pwd
-
-                    echo "=== Files ==="
-                    find . -maxdepth 3 -type f -print
-
-                    echo "=== App directory ==="
-                    ls -la app/
-
-                    echo "=== Running pytest ==="
                     docker run --rm \
                     -v "$PWD/app:/app" \
                     -w /app \
                     python:3.12-slim \
-                    sh -c "pip install -q pytest && pytest -v"
+                    sh -c '
+                        pip install -q pytest
+
+                        echo "=== Files inside container ==="
+                        ls -la
+
+                        echo "=== Test file ==="
+                        cat test_app.py
+
+                        echo "=== Pytest version ==="
+                        pytest --version
+
+                        echo "=== Pytest collection ==="
+                        pytest -vv --collect-only
+
+                        echo "=== Python files ==="
+                        python -c "import glob; print(glob.glob(\"*.py\"))"
+                    '
                 '''
             }
         }
