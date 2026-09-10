@@ -70,6 +70,54 @@ pipeline {
             }
         }
 
+        stage('Initialize Kafka') {
+            steps {
+                echo 'Initializing Kafka...'
+
+                sh '''
+                    echo "Waiting for Kafka..."
+
+                    READY=false
+
+                    for i in $(seq 1 30); do
+
+                        if docker exec kafka \
+                            /opt/kafka/bin/kafka-topics.sh \
+                            --bootstrap-server localhost:9092 \
+                            --list \
+                            >/dev/null 2>&1
+                        then
+                            echo "Kafka is ready."
+                            READY=true
+                            break
+                        fi
+
+                        echo "Kafka not ready yet... attempt $i/30"
+                        sleep 2
+                    done
+
+                    if [ "$READY" != "true" ]; then
+                        echo "ERROR: Kafka did not become ready."
+                        docker logs kafka
+                        exit 1
+                    fi
+
+                    echo "Creating Kafka topic..."
+
+                    docker exec kafka \
+                        /opt/kafka/bin/kafka-topics.sh \
+                        --bootstrap-server localhost:9092 \
+                        --create \
+                        --if-not-exists \
+                        --topic elk-jenkins-lab-logs \
+                        --partitions 3 \
+                        --replication-factor 1
+
+                    echo "Kafka topic elk-jenkins-lab-logs is ready."
+                '''
+            }
+        }
+
         stage('Generate Logs') {
             steps {
                 echo "Generating logs for Jenkins build ${BUILD_NUMBER}..."
