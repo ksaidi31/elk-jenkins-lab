@@ -36,7 +36,8 @@ services:
       retries: 20
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.17.0
+    build:
+      context: ./logstash
     container_name: logstash
     depends_on:
       elasticsearch:
@@ -44,9 +45,6 @@ services:
     ports:
       - "5000:5000"
       - "9600:9600"
-    volumes:
-      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
-      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.17.0
