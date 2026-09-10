@@ -1,15 +1,11 @@
 import json
 import os
 import random
-import socket
 import time
 from datetime import datetime, timezone
 
 from kafka import KafkaProducer
 
-
-LOGSTASH_HOST = "logstash"
-LOGSTASH_PORT = 5000
 
 KAFKA_HOST = "kafka"
 KAFKA_PORT = 9092
@@ -45,31 +41,19 @@ def send_events(number_of_events=10):
     kafka_producer = create_kafka_producer()
 
     try:
-        with socket.create_connection(
-            (LOGSTASH_HOST, LOGSTASH_PORT),
-            timeout=10
-        ) as logstash_socket:
+        for _ in range(number_of_events):
+            event = generate_event()
 
-            for _ in range(number_of_events):
-                event = generate_event()
+            kafka_producer.send(
+                KAFKA_TOPIC,
+                value=event
+            )
 
-                message = json.dumps(event) + "\n"
+            print(json.dumps(event))
 
-                # Send event to Logstash
-                logstash_socket.sendall(message.encode("utf-8"))
+            time.sleep(0.2)
 
-                # Send event to Kafka
-                kafka_producer.send(
-                    KAFKA_TOPIC,
-                    value=event
-                )
-
-                print(json.dumps(event))
-
-                time.sleep(0.2)
-
-            # Make sure all Kafka messages have been sent
-            kafka_producer.flush()
+        kafka_producer.flush()
 
     finally:
         kafka_producer.close()
