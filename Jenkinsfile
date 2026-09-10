@@ -82,7 +82,7 @@ pipeline {
             }
         }
 
-        stage('Verify Elasticsearch') {
+        stage('Elasticsearch healthcheck') {
             steps {
                 echo 'Waiting for Elasticsearch...'
 
@@ -91,6 +91,16 @@ pipeline {
 
                     curl -f \
                       http://elasticsearch:9200/_cluster/health
+                '''
+            }
+        }
+
+        stage('Verify Elasticsearch data created') {
+            steps {
+                echo 'Verifying Elasticsearch data...'
+
+                sh '''
+                    ./scripts/verify-elasticsearch.sh
                 '''
             }
         }
