@@ -146,6 +146,16 @@ pipeline {
             }
         }
 
+        stage('Verify Kafka data') {
+            steps {
+                echo 'Verifying Kafka data...'
+
+                sh '''
+                    ./scripts/verify-kafka.sh
+                '''
+            }
+        }
+
         stage('Elasticsearch healthcheck') {
             steps {
                 echo 'Waiting for Elasticsearch...'
