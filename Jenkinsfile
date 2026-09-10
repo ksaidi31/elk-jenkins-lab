@@ -38,6 +38,34 @@ pipeline {
 
                 sh '''
                     docker compose up -d elasticsearch logstash kibana
+
+                    echo "Waiting for Logstash TCP port 5000..."
+
+                    READY=false
+
+                    for i in $(seq 1 30); do
+
+                        if docker run --rm \
+                            --network ${COMPOSE_PROJECT_NAME}_default \
+                            busybox \
+                            sh -c "nc -z logstash 5000" \
+                            >/dev/null 2>&1
+                        then
+                            echo "Logstash is ready on port 5000."
+                            READY=true
+                            break
+                        fi
+
+                        echo "Logstash not ready yet... attempt $i/30"
+                        sleep 2
+
+                    done
+
+                    if [ "$READY" != "true" ]; then
+                        echo "ERROR: Logstash did not become ready."
+                        docker logs logstash
+                        exit 1
+                    fi
                 '''
             }
         }
