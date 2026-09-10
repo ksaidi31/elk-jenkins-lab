@@ -21,11 +21,21 @@ pipeline {
                 echo 'Running Python tests...'
 
                 sh '''
+                    echo "=== Workspace ==="
+                    pwd
+
+                    echo "=== Files ==="
+                    find . -maxdepth 3 -type f -print
+
+                    echo "=== App directory ==="
+                    ls -la app/
+
+                    echo "=== Running pytest ==="
                     docker run --rm \
-                      -v "$PWD/app:/app" \
-                      -w /app \
-                      python:3.12-slim \
-                      sh -c "pip install -q pytest && pytest -v"
+                    -v "$PWD/app:/app" \
+                    -w /app \
+                    python:3.12-slim \
+                    sh -c "pip install -q pytest && pytest -v"
                 '''
             }
         }
