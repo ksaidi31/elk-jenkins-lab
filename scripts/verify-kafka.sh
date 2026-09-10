@@ -1,6 +1,7 @@
 #!/bin/sh
 
 TOPIC="elk-jenkins-lab-logs"
+TMP_FILE="/tmp/kafka-messages-${BUILD_NUMBER}.log"
 
 echo "================================="
 echo "Verifying Kafka data..."
@@ -27,32 +28,36 @@ echo "Kafka topic is reachable."
 
 echo "Reading Kafka messages..."
 
-COUNT=$(docker exec kafka \
+docker exec kafka \
     /opt/kafka/bin/kafka-console-consumer.sh \
     --bootstrap-server localhost:9092 \
     --topic "${TOPIC}" \
     --from-beginning \
-    --timeout-ms 5000 \
-    2>/dev/null \
-    | python3 -c '
+    --timeout-ms 10000 \
+    > "${TMP_FILE}" 2>/dev/null
+
+COUNT=$(python3 -c '
 import json
 import sys
 
 build_number = sys.argv[1]
 count = 0
 
-for line in sys.stdin:
-    try:
-        event = json.loads(line)
+with open(sys.argv[2], "r") as f:
+    for line in f:
+        try:
+            event = json.loads(line)
 
-        if str(event.get("build_number")) == build_number:
-            count += 1
+            if str(event.get("build_number")) == build_number:
+                count += 1
 
-    except json.JSONDecodeError:
-        pass
+        except json.JSONDecodeError:
+            pass
 
 print(count)
-' "${BUILD_NUMBER}")
+' "${BUILD_NUMBER}" "${TMP_FILE}")
+
+rm -f "${TMP_FILE}"
 
 echo "Messages found for build ${BUILD_NUMBER}: ${COUNT}"
 
