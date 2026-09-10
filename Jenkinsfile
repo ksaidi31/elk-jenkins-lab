@@ -9,14 +9,13 @@ pipeline {
 
     stages {
 
-        /* Uncomment to use git repo
         stage('Checkout') {
             steps {
                 echo 'Checking out source code...'
                 checkout scm
             }
         }
-        */
+
         stage('Python Tests') {
             steps {
                 echo 'Running Python tests...'
