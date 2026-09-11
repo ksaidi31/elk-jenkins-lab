@@ -38,21 +38,21 @@ pipeline {
                 echo 'Starting ELK...'
 
                 sh '''
-                    docker compose up -d elasticsearch logstash kibana
+                    echo "Building and starting ELK..."
 
-                    echo "Waiting for Logstash TCP port 5000..."
+                    docker compose up -d --build elasticsearch logstash kibana
+
+                    echo "Waiting for Logstash API..."
 
                     READY=false
 
                     for i in $(seq 1 30); do
 
-                        if docker run --rm \
-                            --network ${COMPOSE_PROJECT_NAME}_default \
-                            busybox \
-                            sh -c "nc -z logstash 5000" \
+                        if docker exec logstash \
+                            curl -fs http://localhost:9600/_node/pipelines \
                             >/dev/null 2>&1
                         then
-                            echo "Logstash is ready on port 5000."
+                            echo "Logstash API is ready."
                             READY=true
                             break
                         fi
@@ -64,9 +64,12 @@ pipeline {
 
                     if [ "$READY" != "true" ]; then
                         echo "ERROR: Logstash did not become ready."
+                        echo "===== Logstash logs ====="
                         docker logs logstash
                         exit 1
                     fi
+
+                    echo "ELK stack is ready."
                 '''
             }
         }
